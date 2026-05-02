@@ -46,8 +46,6 @@ $hasReview = $review->hasReview($user_id, $day_id);
 
 // Reset day
 if (isset($_GET["reset"])) {
-
-    // Delete review (open the day again)
     $stmt = $conn->prepare("DELETE FROM reviews WHERE user_id = ? AND day_id = ?");
     $stmt->execute([$user_id, $day_id]);
 
@@ -60,149 +58,211 @@ if (isset($_GET["reset"])) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Tasks</title>
+<title>Tasks</title>
 
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+<link rel="stylesheet" href="assets/css/bootstrap.min.css">
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #060606cf, #3d3f3d);
-            min-height: 100vh;
-        }
+<style>
+body {
+    background: linear-gradient(135deg, #2c2c2c, #3f3f3f);
+    min-height: 100vh;
+    color: white;
+}
 
-        .container-box {
-            max-width: 600px;
-            margin: 40px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 20px;
-            animation: fadeIn 0.5s ease-in-out;
-        }
+.container-box {
+    max-width: 650px;
+    margin: 50px auto;
+    background: #444;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    animation: fadeIn 0.4s ease-in-out;
+}
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px);}
+    to { opacity: 1; transform: translateY(0);}
+}
 
-        .btn-green {
-            background-color: #28a745;
-            border: none;
-        }
+h3 {
+    text-align: center;
+    color: #ffffff;
+}
 
-        .btn-green:hover {
-            background-color: #218838;
-        }
+/* Inputs */
+input, textarea {
+    background: #555 !important;
+    color: white !important;
+    border: none !important;
+}
 
-        .center-btn {
-            display: block;
-            margin: 10px auto;
-            width: 60%;
-        }
+/* Buttons */
+.btn-green {
+    background: linear-gradient(135deg, #28a745, #1ecb24);
+    border: none;
+}
 
-        .task-done {
-            text-decoration: line-through;
-            color: gray;
-        }
-    </style>
+.btn-green:hover {
+    transform: scale(1.05);
+}
+
+/* Tasks */
+.list-group-item {
+    background: #555;
+    color: white;
+    border: none;
+    transition: 0.2s;
+}
+
+.list-group-item:hover {
+    background: #ff3b3b;
+    transform: scale(1.02);
+}
+
+/* Done task */
+.task-done {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+/* Center buttons */
+.center-btn {
+    display: block;
+    margin: 10px auto;
+    width: 60%;
+    transition: 0.2s;
+}
+
+.center-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Progress bar */
+.progress {
+    background: #555;
+}
+
+/* Alert animation */
+.alert {
+    animation: fadeIn 0.3s ease-in-out;
+}
+</style>
 </head>
 
 <body>
 
-<div class="container-box shadow">
+<div class="container-box">
 
-    <h3 class="text-center mb-3">📋 Tasks</h3>
+<h3 class="mb-3">📋 Tasks</h3>
 
-    <!-- SUCCESS MESSAGE -->
-    <?php if (isset($_GET["success"])): ?>
-        <div class="alert alert-success text-center" id="successAlert">
-            🎉 Day completed! You are awesome 😎
-        </div>
-    <?php endif; ?>
+<!-- SUCCESS -->
+<?php if (isset($_GET["success"])): ?>
+<div class="alert alert-success text-center" id="successAlert">
+🎉 Day completed! You are awesome 😎
+</div>
+<?php endif; ?>
 
-    <!-- ADD TASK -->
-    <form method="POST" class="d-flex mb-3">
-        <input type="text" name="title" class="form-control me-2" placeholder="New task" required>
-        <button class="btn btn-green text-white">Add</button>
-    </form>
+<!-- ADD TASK -->
+<form method="POST" class="d-flex mb-3">
+<input type="text" name="title" class="form-control me-2" placeholder="New task" required>
+<button class="btn btn-green text-white">Add</button>
+</form>
 
-    <?php
-    $total = count($tasks);
-    $completed = 0;
+<?php
+$total = count($tasks);
+$completed = 0;
 
-    foreach ($tasks as $t) {
-        if ($t['status'] == 1) $completed++;
-    }
+foreach ($tasks as $t) {
+    if ($t['status'] == 1) $completed++;
+}
 
-    $percent = $total > 0 ? ($completed / $total) * 100 : 0;
-    ?>
+$percent = $total > 0 ? ($completed / $total) * 100 : 0;
+?>
 
-    <!-- PROGRESS -->
-    <p class="text-center">
-        Completed: <?php echo $completed; ?> / <?php echo $total; ?>
-    </p>
+<!-- PROGRESS -->
+<p class="text-center">
+Completed: <?php echo $completed; ?> / <?php echo $total; ?>
+</p>
 
-    <div class="progress mb-3">
-        <div class="progress-bar bg-success" style="width: <?php echo $percent; ?>%">
-            <?php echo round($percent); ?>%
-        </div>
-    </div>
+<div class="progress mb-3">
+<div class="progress-bar bg-success" style="width: <?php echo $percent; ?>%">
+<?php echo round($percent); ?>%
+</div>
+</div>
 
-    <!-- TASK LIST -->
-    <ul class="list-group mb-3">
-        <?php foreach ($tasks as $t): ?>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
+<!-- TASK LIST -->
+<ul class="list-group mb-3">
+<?php foreach ($tasks as $t): ?>
+<li class="list-group-item d-flex justify-content-between align-items-center">
 
-                <span class="<?php echo $t['status'] ? 'task-done' : ''; ?>">
-                    <?php echo $t['title']; ?>
-                </span>
+<span class="<?php echo $t['status'] ? 'task-done' : ''; ?>">
+<?php echo $t['title']; ?>
+</span>
 
-                <div>
-                    <?php if ($t['status'] == 0): ?>
-                        <a class="btn btn-sm btn-success"
-                           href="?day_id=<?php echo $day_id; ?>&complete=<?php echo $t['id']; ?>">
-                           ✔
-                        </a>
-                    <?php endif; ?>
+<div>
+<?php if ($t['status'] == 0): ?>
+<a class="btn btn-sm btn-success"
+href="?day_id=<?php echo $day_id; ?>&complete=<?php echo $t['id']; ?>">
+✔
+</a>
+<?php endif; ?>
 
-                    <a class="btn btn-sm btn-danger"
-                       href="?day_id=<?php echo $day_id; ?>&delete=<?php echo $t['id']; ?>">
-                       ✖
-                    </a>
-                </div>
+<a class="btn btn-sm btn-danger"
+href="?day_id=<?php echo $day_id; ?>&delete=<?php echo $t['id']; ?>">
+✖
+</a>
+</div>
 
-            </li>
-        <?php endforeach; ?>
-    </ul>
+</li>
+<?php endforeach; ?>
+</ul>
 
-    <!-- FINISH DAY -->
-    <?php if (!$hasReview): ?>
+<!-- FINISH DAY -->
+<?php if (!$hasReview): ?>
 
-        <form method="POST">
-            <input type="number" name="rating" class="form-control mb-2" min="1" max="5" placeholder="Rate your day (1-5)" required>
-            <textarea name="note" class="form-control mb-2" placeholder="What was easy or hard?" required></textarea>
-            <button class="btn btn-primary center-btn">Finish Day</button>
-        </form>
+<form method="POST">
+<input type="number" name="rating" class="form-control mb-2" min="1" max="5" placeholder="Rate your day (1-5)" required>
+<textarea name="note" class="form-control mb-2" placeholder="What was easy or hard?" required></textarea>
 
-        <?php else: ?>
+<button class="btn btn-green center-btn">
+Finish Day
+</button>
+</form>
 
-    <p class="text-success text-center mb-2">✔ Day completed</p>
+<?php else: ?>
 
-    <a href="?day_id=<?php echo $day_id; ?>&reset=1"
-       class="btn btn-warning center-btn">
-       🔄 Reset Day
-    </a>
+<?php
+$messages = [
+    "You did great today 🔥",
+    "Keep going, you are improving 💪",
+    "Solid progress today 🚀",
+    "You’re becoming more disciplined 😎"
+];
+$randomMessage = $messages[array_rand($messages)];
+?>
 
-        <?php endif; ?>
+<p class="text-success text-center">
+✔ Day completed <br>
+<small><?php echo $randomMessage; ?></small>
+</p>
 
-    <a href="dashboard.php" class="btn btn-secondary center-btn">Back</a>
+<a href="?day_id=<?php echo $day_id; ?>&reset=1"
+class="btn btn-warning center-btn">
+🔄 Reset Day
+</a>
+
+<?php endif; ?>
+
+<a href="dashboard.php" class="btn btn-secondary center-btn">
+Back
+</a>
 
 </div>
 
-<!-- AUTO HIDE ALERT -->
 <script>
 setTimeout(() => {
-    let alert = document.getElementById('successAlert');
-    if (alert) alert.style.display = 'none';
+let alert = document.getElementById('successAlert');
+if (alert) alert.style.display = 'none';
 }, 3000);
 </script>
 
